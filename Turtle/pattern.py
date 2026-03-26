@@ -1,38 +1,77 @@
-from turtle import Turtle
+from turtle import Turtle, pensize
 import random
 import time
 import math
+import colorsys
 
-colours = ["DarkSlateBlue", "green4", "PaleTurquoise", "red"]
-random.shuffle(colours)
+ss = 1000 #screensize
 
-number = int(input("No. Turtles? "))
-cursors = [Turtle() for i in colours[:number]]
-for i, turtle in enumerate(cursors):
-    turtle.penup()
-    turtle.color(colours[i])
-    turtle.pensize(5)
-    turtle.shape("classic")
-    turtle.speed("fastest")
-    turtle.ht()
-    turtle.goto(0, 0)
+print("Spirals")
+number = int(input("Input a number: "))
+curviness = int(input("How curvy?(lower is less, changes depending on power scale) "))
 
-def rings(turtle):
-    index = colours.index(turtle.fillcolor())
-    xpos = [x - index for x in range(2 * index)]
-    ypos = []
-    for x in xpos:
-        ypos.insert(0, round((index ** 2 - x ** 2) ** (1/2)))
-        ypos.append(-1 * round((index ** 2 - x ** 2) ** (1/2)))
+spectrum = int(input("Choose colour spectrum (1 - 5)"))
+match spectrum:
+    case 1:
+        rlim = (128, 255)
+        glim = (128, 255)
+        blim = (128, 255)
+    case 2:
+        rlim = (67, 202)
+        glim = (0, 67)
+        blim = (135, 255)
+    case 3:
+        rlim = (0, 67)
+        glim = (135, 255)
+        blim = (67, 202)
+    case 4:
+        rlim = (0, 135)
+        glim = (135, 255)
+        blim = (135, 255)
+    case 5:
+        rlim = (135, 255)
+        glim = (0, 135)
+        blim = (135, 255)
+    case _:
+        rlim = (0, 255)
+        glim = (0, 255)
+        blim = (0, 255)
 
-    turtle.pendown()
-    for i, y in enumerate(ypos):
-        time.sleep(0.5)
-        turtle.goto(xpos[i % len(xpos)] * 5 , 5 * y)
+cursor = Turtle()
 
-time.sleep(1)
+def reset():
+    cursor.penup()
+    cursor.pensize(1)
+    cursor.speed(10)
+    cursor.ht()
+    cursor.home()
 
-for cursor in cursors[::-1]:
-    rings(cursor)
+reset()
+cursor.screen.screensize(ss, ss)
+cursor.screen.tracer(0)
+
+for iteration in range(9999):
+    offset = random.randint(0, 360)
+    for i in range(number):
+        cursor.screen.colormode(255)
+        cursor.color(random.randint(*rlim), random.randint(*glim), random.randint(*blim))
+        cursor.pendown()
+        cursor.setheading(360 * i / number % 360 + offset)
+        ccUp = True
+        while not any(abs(i1) >= ss for i1 in cursor.position()):
+            for i2 in range(1, 121):
+                cursor.right(1 * (-1 if ccUp else 1))
+                cursor.forward(cursor.pensize() / curviness)
+                cursor.pensize(cursor.pensize() + ss / number / 628)
+                if any(abs(i3) >= ss for i3 in cursor.position()):
+                    break
+                colour = list(colorsys.rgb_to_hsv(*[i/255 for i in cursor.pencolor()]))
+                colour[2] = max(0, colour[2] - (colour[2] if colour[2] != 0 else 1) / 50 / (cursor.distance(ss/2 * (1 if ((offset + 360 * i / number % 360) - 90) < 90 else -1), ss/2 * (1 if ((offset + 360 * i / number % 360) - 180) > 0 else -1)))**1.39 / (number * cursor.pensize() * curviness**4))
+                cursor.color(*[int(255 * i) for i in colorsys.hsv_to_rgb(*colour)])
+            ccUp = not ccUp
+        cursor.penup()
+        reset()
+        cursor.screen.update()
+
 
 input()
