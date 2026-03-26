@@ -42,9 +42,10 @@ cursor = Turtle()
 def reset():
     cursor.penup()
     cursor.pensize(1)
-    cursor.speed(10)
+    cursor.speed(0)
     cursor.ht()
     cursor.home()
+    cursor.setundobuffer(None)
 
 reset()
 cursor.screen.screensize(ss, ss)
